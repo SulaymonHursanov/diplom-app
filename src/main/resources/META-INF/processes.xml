@@ -1,0 +1,18 @@
+<process-application
+        xmlns="http://www.camunda.org/schema/1.0/ProcessApplication"
+>
+
+    <process-archive name="semi" tenantId="semi">
+        <process-engine>default</process-engine>
+        <resource>process/furnitureFactory.bpmn</resource>
+        <properties>
+            <property name="jobExecutorActivate">true</property>
+            <property name="resourceRootPath">classpath:process/</property>
+            <property name="isDeleteUponUndeploy">false</property>
+            <property name="isScanForProcessDefinitions">false</property>
+            <property name="isResumePreviousVersions">true</property>
+            <property name="resumePreviousBy">deployment-name</property>
+        </properties>
+    </process-archive>
+
+</process-application>

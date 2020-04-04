@@ -1,0 +1,12 @@
+logging.level.org.springframework.web: DEBUG
+
+spring:
+  datasource:
+   url: jdbc:postgresql://localhost/camunda
+   username: postgres
+   password: root
+   driver-class-name: org.postgresql.Driver
+  jpa:
+    generate-ddl: true
+    properties:
+      hibernate.jdbc.lob.non_contextual_creation: true

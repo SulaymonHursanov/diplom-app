@@ -1,4 +1,4 @@
-logging.level.org.springframework.web: DEBUG
+#logging.level.org.springframework.web: DEBUG
 
 spring:
   datasource:
@@ -10,3 +10,19 @@ spring:
     generate-ddl: true
     properties:
       hibernate.jdbc.lob.non_contextual_creation: true
+
+camunda:
+  bpm:
+    job-execution:
+      core-pool-size: 20
+      max-pool-size: 60
+      deployment-aware: true
+    admin-user:
+      id: admin
+      password: admin
+    filter:
+      create: All tasks
+    database:
+      schema-update: true
+    jpa:
+      handle-transaction: false

@@ -44,34 +44,56 @@ public class TimeCalculatorActivity implements JavaDelegate {
 		int max = Integer.parseInt(properties.get("max"));
 		int hours = getRandomNumberInRange(min, max);
 
-
-		Optional<TaskTime> previous = taskTimeRepository.findFirstByOrderByToTimeDesc();
 		LocalDateTime fromTime ;
-		if (previous.isPresent()){
-//			fromTime = LocalDateTime.parse((String)delegateExecution.getVariable("fromTime"), formatter);
-			fromTime = previous.get().getToTime();
-		}else {
-			fromTime = LocalDateTime.now();
+
+		String processInstanceId = delegateExecution.getProcessInstanceId();
+		String parentTaskId = properties.get("parentTaskId");
+		log.info("parent task Id: {}", parentTaskId );
+
+
+		if (Objects.nonNull(parentTaskId)) {
+			Optional<TaskTime> previous = taskTimeRepository.findFirstByProcessIdAndTaskId(processInstanceId, parentTaskId);
+			log.info("is found previous task: {}", previous.isPresent() ? "yes" : "no");
+			if (previous.isPresent()) {
+				fromTime = previous.get().getToTime();
+			} else throw new IllegalArgumentException("previous task not found");
+		} else {
+			/*Optional<TaskTime> firstByOrderByToTimeDesc = taskTimeRepository.findFirstByProcessIdOrderByEventTimeDesc(processInstanceId);
+			if (firstByOrderByToTimeDesc.isPresent()) {
+				TaskTime taskTime = firstByOrderByToTimeDesc.get();
+				fromTime = taskTime.getToTime();
+			} else {
+				fromTime = LocalDateTime.now();
+			}*/
+			Object fromTimeObj = delegateExecution.getVariable("fromTime");
+			if (Objects.nonNull(fromTimeObj)) {
+				fromTime = LocalDateTime.parse((String)fromTimeObj, formatter);
+			} else {
+				fromTime = LocalDateTime.now();
+			}
 		}
 
-		Thread.sleep( hours * 1000);
 
 		LocalDateTime endOfTaskTime = fromTime.plusHours(hours);
+		log.info("from: {}, till: {}, hours: {}, name: {}, id: {}. processId: {}",
+				fromTime.format(formatter), endOfTaskTime.format(formatter), hours, currentActivityName, serviceTask.getId(), processInstanceId);
 
-		saveTask(currentActivityName, currentActivityId, hours, fromTime, endOfTaskTime);
+		saveTask(currentActivityName, currentActivityId, processInstanceId,hours, fromTime, endOfTaskTime);
 
 		delegateExecution.setVariable("fromTime", endOfTaskTime.format(formatter));
+		Thread.sleep( hours * 1000);
 
-		log.info("from: {}, till: {}, hours: {}, name: {}", fromTime.format(formatter), endOfTaskTime.format(formatter), hours, currentActivityName);
 	}
 
-	private void saveTask(String currentActivityName, String currentActivityId, int hours, LocalDateTime fromTime, LocalDateTime endOfTaskTime) {
+	private void saveTask(String currentActivityName, String currentActivityId, String processInstanceId, int hours, LocalDateTime fromTime, LocalDateTime endOfTaskTime) {
 		TaskTime taskTime = new TaskTime();
 		taskTime.setFromTime(fromTime);
 		taskTime.setToTime(endOfTaskTime);
 		taskTime.setHours(hours);
 		taskTime.setName(currentActivityName);
 		taskTime.setTaskId(currentActivityId);
+		taskTime.setProcessId(processInstanceId);
+		taskTime.setEventTime(LocalDateTime.now());
 		taskTimeRepository.save(taskTime);
 	}
 

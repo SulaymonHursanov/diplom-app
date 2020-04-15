@@ -5,6 +5,7 @@
     <process-archive name="semi" tenantId="semi">
         <process-engine>default</process-engine>
         <resource>process/furnitureFactory.bpmn</resource>
+        <resource>process/externalTaskTest.bpmn</resource>
         <properties>
             <property name="jobExecutorActivate">true</property>
             <property name="resourceRootPath">classpath:process/</property>

@@ -19,4 +19,6 @@ public class TaskTime {
 	private LocalDateTime toTime;
 	private int hours;
 	private String taskId;
+	private LocalDateTime eventTime;
+	private String processId;
 }

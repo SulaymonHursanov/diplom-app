@@ -1,54 +1,116 @@
 package ru.semi;
 
+import com.fasterxml.jackson.core.type.TypeReference;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.client.ExternalTaskClient;
-import org.camunda.bpm.client.variable.ClientValues;
-import org.camunda.bpm.engine.variable.value.ObjectValue;
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
-import org.springframework.http.HttpEntity;
-import org.springframework.http.HttpHeaders;
-import org.springframework.http.HttpMethod;
-import org.springframework.http.MediaType;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.*;
+import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 import org.springframework.web.client.RestTemplate;
 import ru.semi.dto.ExternalTaskDto;
+import ru.semi.dto.ExternalWorkerDto;
 import ru.semi.dto.TopicDto;
 
-import java.util.ArrayDeque;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 @Slf4j
 @Component
 public class ExternalTaskClientApp {
 
+	private Map<String, Queue<String>> taskQueueMap = new HashMap<>();
 
-/*
-	public void processByScheduler () {
+	@SneakyThrows
+	@Scheduled(fixedDelay = 10 * 1000)
+	public void handleTasks () {
+		log.info("starting worker handler");
 		RestTemplate restTemplate = new RestTemplate();
 		String url = "http://localhost:8080/rest/external-task/fetchAndLock";
 
-		ExternalTaskDto externalTaskDto = new ExternalTaskDto();
-		externalTaskDto.setAsyncResponseTimeout(1000);
-		externalTaskDto.setMaxTasks(10L);
-		externalTaskDto.setUsePriority(true);
-		externalTaskDto.setWorkerId("cloud");
+		ExternalWorkerDto externalWorkerDto = new ExternalWorkerDto();
+		externalWorkerDto.setAsyncResponseTimeout(1000);
+		externalWorkerDto.setMaxTasks(10L);
+		externalWorkerDto.setUsePriority(true);
+		externalWorkerDto.setWorkerId("cloud");
 		TopicDto topic = new TopicDto();
 		topic.setTopicName("invoiceCreator");
 		topic.setLockDuration(20000L);
-		externalTaskDto.setTopics(Collections.singletonList(topic));
+		externalWorkerDto.setTopics(Collections.singletonList(topic));
 
 		HttpHeaders headers = new HttpHeaders();
 		headers.setContentType(MediaType.APPLICATION_JSON);
-//		HttpEntity<ExternalTaskDto> httpEntity = new HttpEntity<>(,headers);
-//		restTemplate.exchange(url, HttpMethod.POST, httpEntity, );
+		HttpEntity<ExternalWorkerDto> httpEntity = new HttpEntity<>(externalWorkerDto,headers);
+		ResponseEntity<List<ExternalTaskDto>> exchange = restTemplate.exchange(
+					url,
+					HttpMethod.POST,
+					httpEntity,
+					new ParameterizedTypeReference<List<ExternalTaskDto>>() {}
+				);
+		List<ExternalTaskDto> externalTaskDtos = exchange.getBody();
+		log.info("worker req status: {}", exchange.getStatusCode().getReasonPhrase());
+		log.info("worker req body: {}",externalTaskDtos);
+		externalTaskDtos.forEach(externalTaskDto -> {
+					String task = externalTaskDto.getProcessInstanceId() + ":" + externalTaskDto.getActivityId() + "::" + externalTaskDto.getId();
+					if (taskQueueMap.containsKey(externalTaskDto.getActivityId())) {
+						Queue<String> taskQueue = taskQueueMap.get(externalTaskDto.getActivityId());
+						if (!taskQueue.contains(task)){
+							taskQueue.add(task);
+						}
+					}else {
+						taskQueueMap.put(externalTaskDto.getActivityId(), new LinkedList<String>() {{add(task);}});
+					}
+		});
+
+		if (!taskQueueMap.isEmpty()) {
+			System.out.println(taskQueueMap);
+			processTask();
+
+		}
+		log.info("ending worker handler");
 	}
-*/
+
+	// i need new function for storing end time of tasks to compare with current execution task to get sequental date
+
+	@SneakyThrows
+//	@Scheduled(fixedDelay = 5 * 1000)
+	public void processTask () {
+		log.info("started process task");
+		RestTemplate restTemplate = new RestTemplate();
+		String url = "http://localhost:8080/rest/external-task/{id}/complete";
+
+		ExternalWorkerDto externalWorkerDto = new ExternalWorkerDto();
+		externalWorkerDto.setWorkerId("cloud");
+
+		HttpHeaders headers = new HttpHeaders();
+		headers.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<ExternalWorkerDto> httpEntity = new HttpEntity<>(externalWorkerDto,headers);
+
+		Map<String, Queue<String>> swap = new HashMap<>(taskQueueMap);
+		swap.forEach((k, v) -> {
+			for (String task : v) {
+				// process task
+				String id = task.split("::")[1];
+				System.out.println("id: " + id);
+				ResponseEntity<Void> exchange = restTemplate.exchange(
+						url,
+						HttpMethod.POST,
+						httpEntity,
+						Void.class,
+						id
+				);
+				System.out.println(exchange.getStatusCode().getReasonPhrase());
+				boolean remove = taskQueueMap.get(k).remove(task);
+				log.info("is removed task " + task + " ? " + (remove ? "yes": "no"));
+			}
+		});
+		log.info("ending process task");
+	}
 
 
-	@EventListener(ApplicationReadyEvent.class)
+//	@EventListener(ApplicationReadyEvent.class)
 	public void process() {
 		System.out.println("test");
 		ExternalTaskClient client = ExternalTaskClient.create()

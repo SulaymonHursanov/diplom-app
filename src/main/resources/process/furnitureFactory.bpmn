@@ -74,14 +74,13 @@
       <bpmn:incoming>SequenceFlow_05i1xd1</bpmn:incoming>
       <bpmn:outgoing>SequenceFlow_1s56emw</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:serviceTask id="Task_1" name="Конструирование мебели" camunda:type="external" camunda:topic="invoiceCreator">
+    <bpmn:serviceTask id="Task_1" name="Конструирование мебели" camunda:delegateExpression="${timeCalculatorActivity}">
       <bpmn:extensionElements>
         <camunda:properties>
           <camunda:property name="min" value="6" />
           <camunda:property name="max" value="10" />
           <camunda:property name="parentTaskId" value="Task_0" />
         </camunda:properties>
-        <camunda:executionListener delegateExpression="${timeCalculatorActivity}" event="end" />
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1fnzdhi</bpmn:incoming>
       <bpmn:outgoing>Flow_1m40kqa</bpmn:outgoing>
@@ -161,14 +160,13 @@
       <bpmn:outgoing>SequenceFlow_0qqjd0c</bpmn:outgoing>
     </bpmn:parallelGateway>
     <bpmn:sequenceFlow id="Flow_14jqrk8" sourceRef="ExclusiveGateway_0hbm4la" targetRef="Task_2" />
-    <bpmn:serviceTask id="Task_2" name="Закупка материалов" camunda:type="external" camunda:topic="invoiceCreator">
+    <bpmn:serviceTask id="Task_2" name="Закупка материалов" camunda:delegateExpression="${timeCalculatorActivity}">
       <bpmn:extensionElements>
         <camunda:properties>
           <camunda:property name="min" value="1" />
           <camunda:property name="max" value="2" />
           <camunda:property name="parentTaskId" value="Task_0" />
         </camunda:properties>
-        <camunda:executionListener delegateExpression="${timeCalculatorActivity}" event="end" />
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_14jqrk8</bpmn:incoming>
       <bpmn:outgoing>Flow_1rbfhlg</bpmn:outgoing>

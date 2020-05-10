@@ -1,0 +1,47 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:camunda="http://camunda.org/schema/1.0/bpmn" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_0mfvlmu" targetNamespace="http://bpmn.io/schema/bpmn" exporter="Camunda Modeler" exporterVersion="3.7.0">
+  <bpmn:process id="Process_1tg1vai" isExecutable="true">
+    <bpmn:startEvent id="StartEvent_1">
+      <bpmn:outgoing>Flow_0hf2yxl</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:sequenceFlow id="Flow_0hf2yxl" sourceRef="StartEvent_1" targetRef="Activity_0rwtixc" />
+    <bpmn:endEvent id="Event_0sxrjnz">
+      <bpmn:incoming>Flow_1rdtjak</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:sequenceFlow id="Flow_1rdtjak" sourceRef="Activity_0rwtixc" targetRef="Event_0sxrjnz" />
+    <bpmn:serviceTask id="Activity_0rwtixc" name="Генерация заказов" camunda:delegateExpression="${processGeneratorActivity}">
+      <bpmn:extensionElements>
+        <camunda:properties>
+          <camunda:property name="workingStartTime" value="08:00" />
+          <camunda:property name="workingEndTime" value="18:00" />
+          <camunda:property name="fromDate" value="2020-05-10" />
+          <camunda:property name="tillDate" value="2020-05-30" />
+          <camunda:property name="orderCount" value="25" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_0hf2yxl</bpmn:incoming>
+      <bpmn:outgoing>Flow_1rdtjak</bpmn:outgoing>
+    </bpmn:serviceTask>
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_1">
+    <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Process_1tg1vai">
+      <bpmndi:BPMNShape id="_BPMNShape_StartEvent_2" bpmnElement="StartEvent_1">
+        <dc:Bounds x="179" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_0hf2yxl_di" bpmnElement="Flow_0hf2yxl">
+        <di:waypoint x="215" y="117" />
+        <di:waypoint x="370" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Event_0sxrjnz_di" bpmnElement="Event_0sxrjnz">
+        <dc:Bounds x="652" y="99" width="36" height="36" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_1rdtjak_di" bpmnElement="Flow_1rdtjak">
+        <di:waypoint x="470" y="117" />
+        <di:waypoint x="652" y="117" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNShape id="Activity_021gtqm_di" bpmnElement="Activity_0rwtixc">
+        <dc:Bounds x="370" y="77" width="100" height="80" />
+      </bpmndi:BPMNShape>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>

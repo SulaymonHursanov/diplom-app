@@ -6,6 +6,9 @@
         <process-engine>default</process-engine>
         <resource>process/furnitureFactory.bpmn</resource>
         <resource>process/externalTaskTest.bpmn</resource>
+        <resource>process/diagram_1.bpmn</resource>
+        <resource>process/diagram_2.bpmn</resource>
+        <resource>process/diagram_3.bpmn</resource>
         <properties>
             <property name="jobExecutorActivate">true</property>
             <property name="resourceRootPath">classpath:process/</property>

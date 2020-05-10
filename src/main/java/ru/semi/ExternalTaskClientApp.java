@@ -24,7 +24,7 @@ public class ExternalTaskClientApp {
 	private Map<String, Queue<String>> taskQueueMap = new HashMap<>();
 
 	@SneakyThrows
-	@Scheduled(fixedDelay = 10 * 1000)
+//	@Scheduled(fixedDelay = 10 * 1000)
 	public void handleTasks () {
 		log.info("starting worker handler");
 		RestTemplate restTemplate = new RestTemplate();

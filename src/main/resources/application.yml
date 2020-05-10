@@ -17,6 +17,8 @@ camunda:
       core-pool-size: 20
       max-pool-size: 60
       deployment-aware: true
+      max-jobs-per-acquisition: 10
+      enabled: true
     admin-user:
       id: admin
       password: admin

@@ -8,20 +8,25 @@ import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
 import org.camunda.bpm.model.bpmn.instance.ServiceTask;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperties;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperty;
+import org.springframework.http.*;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
 import ru.semi.entities.TaskTime;
 import ru.semi.repositories.TaskTimeRepository;
+import ru.semi.rest.TaskTimeDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
+import static ru.semi.config.Constants.DATE_TIME_FORMAT;
+
 @RequiredArgsConstructor
 @Slf4j
 @Service
 public class TimeCalculatorActivity implements JavaDelegate {
-	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
 	private final TaskTimeRepository taskTimeRepository;
 
 
@@ -43,44 +48,43 @@ public class TimeCalculatorActivity implements JavaDelegate {
 		int max = Integer.parseInt(properties.get("max"));
 		int hours = getRandomNumberInRange(min, max);
 
-		LocalDateTime fromTime ;
 
 		String processInstanceId = delegateExecution.getProcessInstanceId();
 		String parentTaskId = properties.get("parentTaskId");
-		log.info("parent task Id: {}", parentTaskId );
+//		log.info("parent task Id: {}", parentTaskId );
 
 
-		if (Objects.nonNull(parentTaskId)) {
-			Optional<TaskTime> previous = taskTimeRepository.findFirstByProcessIdAndTaskId(processInstanceId, parentTaskId);
-			log.info("is found previous task: {}", previous.isPresent() ? "yes" : "no");
-			if (previous.isPresent()) {
-				fromTime = previous.get().getToTime();
-			} else throw new IllegalArgumentException("previous task not found");
-		} else {
-			/*Optional<TaskTime> firstByOrderByToTimeDesc = taskTimeRepository.findFirstByProcessIdOrderByEventTimeDesc(processInstanceId);
-			if (firstByOrderByToTimeDesc.isPresent()) {
-				TaskTime taskTime = firstByOrderByToTimeDesc.get();
-				fromTime = taskTime.getToTime();
-			} else {
-				fromTime = LocalDateTime.now();
-			}*/
-			Object fromTimeObj = delegateExecution.getVariable("fromTime");
-			if (Objects.nonNull(fromTimeObj)) {
-				fromTime = LocalDateTime.parse((String)fromTimeObj, formatter);
-			} else {
-				fromTime = LocalDateTime.now();
-			}
+		LocalDateTime fromTime = null;
+
+		Object fromTimeObj = delegateExecution.getVariable("fromTime");
+		if (Objects.nonNull(fromTimeObj)) {
+			fromTime = LocalDateTime.parse((String) fromTimeObj, formatter);
 		}
 
 
-		LocalDateTime endOfTaskTime = fromTime.plusHours(hours);
-		log.info("from: {}, till: {}, hours: {}, name: {}, id: {}. processId: {}",
-				fromTime.format(formatter), endOfTaskTime.format(formatter), hours, currentActivityName, serviceTask.getId(), processInstanceId);
+		TaskTimeDto taskTimeDto = new TaskTimeDto();
+		taskTimeDto.setCurrentActivityId(currentActivityId);
+		taskTimeDto.setCurrentActivityName(currentActivityName);
+		taskTimeDto.setFromTime(fromTime);
+		taskTimeDto.setHours(hours);
+		taskTimeDto.setParentTaskId(parentTaskId);
+		taskTimeDto.setProcessInstanceId(processInstanceId);
 
-		saveTask(currentActivityName, currentActivityId, processInstanceId,hours, fromTime, endOfTaskTime);
+		HttpHeaders httpHeaders = new HttpHeaders();
+		httpHeaders.setContentType(MediaType.APPLICATION_JSON);
+		HttpEntity<TaskTimeDto> httpEntity = new HttpEntity<>(taskTimeDto, httpHeaders);
 
-		delegateExecution.setVariable("fromTime", endOfTaskTime.format(formatter));
-		Thread.sleep( hours * 1000);
+		RestTemplate restTemplate = new RestTemplate();
+		ResponseEntity<String> exchange = restTemplate.exchange(
+				"http://localhost:8080/calculateTime",
+				HttpMethod.POST,
+				httpEntity,
+				String.class
+		);
+		String endOfTaskTime = exchange.getBody();
+
+		delegateExecution.setVariable("fromTime", endOfTaskTime);
+//		Thread.sleep( hours * 1000);
 
 	}
 

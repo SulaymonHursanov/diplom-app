@@ -21,4 +21,6 @@ public class TaskTime {
 	private String taskId;
 	private LocalDateTime eventTime;
 	private String processId;
+	private String parentTaskId;
+	private Integer queueCount;
 }

@@ -71,7 +71,7 @@ public class ProcessGeneratorActivity implements JavaDelegate {
 			Map<String, Object> variables = new HashMap<>();
 			variables.put("fromTime", LocalDateTime.of(fromRandDate, workingStartTime).format(dateTimeFormatter));
 			ProcessInstance furnitureFactoryProcess = runtimeService.startProcessInstanceByKey("FurnitureFactoryProcess", variables);
-			System.out.println("started process");
+			log.info("started process");
 		});
 	}
 

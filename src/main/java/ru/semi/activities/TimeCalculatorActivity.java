@@ -11,8 +11,6 @@ import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperty;
 import org.springframework.http.*;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
-import ru.semi.entities.TaskTime;
-import ru.semi.repositories.TaskTimeRepository;
 import ru.semi.rest.TaskTimeDto;
 
 import java.time.LocalDateTime;
@@ -27,7 +25,6 @@ import static ru.semi.config.Constants.DATE_TIME_FORMAT;
 @Service
 public class TimeCalculatorActivity implements JavaDelegate {
 	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
-	private final TaskTimeRepository taskTimeRepository;
 
 
 	@Override
@@ -84,21 +81,9 @@ public class TimeCalculatorActivity implements JavaDelegate {
 		String endOfTaskTime = exchange.getBody();
 
 		delegateExecution.setVariable("fromTime", endOfTaskTime);
-//		Thread.sleep( hours * 1000);
 
 	}
 
-	private void saveTask(String currentActivityName, String currentActivityId, String processInstanceId, int hours, LocalDateTime fromTime, LocalDateTime endOfTaskTime) {
-		TaskTime taskTime = new TaskTime();
-		taskTime.setFromTime(fromTime);
-		taskTime.setToTime(endOfTaskTime);
-		taskTime.setHours(hours);
-		taskTime.setName(currentActivityName);
-		taskTime.setTaskId(currentActivityId);
-		taskTime.setProcessId(processInstanceId);
-		taskTime.setEventTime(LocalDateTime.now());
-		taskTimeRepository.save(taskTime);
-	}
 
 	private int getRandomNumberInRange(int min, int max) {
 		if (min >= max) {

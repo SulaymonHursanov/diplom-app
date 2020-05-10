@@ -17,14 +17,12 @@ import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.FileReader;
-import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.*;
 import java.util.stream.Collectors;
 
-import static java.util.Objects.compare;
 import static java.util.Objects.nonNull;
 import static ru.semi.config.Constants.DATE_TIME_FORMAT;
 
@@ -41,10 +39,6 @@ public class TimeCalculatorController {
 	public ResponseEntity<String> bpmn () {
 		RestTemplate restTemplate = new RestTemplate();
 
-		HttpHeaders headers = new HttpHeaders();
-		headers.setContentType(MediaType.APPLICATION_XML);
-		headers.setAcceptCharset(Collections.singletonList(StandardCharsets.UTF_8));
-		HttpEntity<Void> httpEntity = new HttpEntity<>(headers);
 		File exchange = restTemplate.execute(
 				"http://localhost:8080/rest/deployment/35b4da19-92d7-11ea-ad5f-54f52165c615/resources/35b4da1a-92d7-11ea-ad5f-54f52165c615/data",
 				HttpMethod.GET,
@@ -56,7 +50,7 @@ public class TimeCalculatorController {
 		});
 		BufferedReader br = new BufferedReader(new FileReader(exchange));
 		String body = br.lines().collect(Collectors.joining("\n"));
-		System.out.println(body);
+		log.debug(body);
 		return ResponseEntity.ok()
 				.body(body);
 	}

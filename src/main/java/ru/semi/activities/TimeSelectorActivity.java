@@ -10,9 +10,11 @@ import ru.semi.repositories.TaskTimeRepository;
 import java.time.format.DateTimeFormatter;
 import java.util.Optional;
 
+import static ru.semi.config.Constants.DATE_TIME_FORMAT;
+
 @Service
 public class TimeSelectorActivity implements JavaDelegate {
-	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
+	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
 
 	@Autowired
 	private TaskTimeRepository taskTimeRepository;

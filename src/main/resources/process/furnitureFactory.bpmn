@@ -80,6 +80,7 @@
           <camunda:property name="min" value="6" />
           <camunda:property name="max" value="10" />
           <camunda:property name="parentTaskId" value="Task_0" />
+          <camunda:property name="orderComplexity_7" value="3" />
         </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>SequenceFlow_1fnzdhi</bpmn:incoming>

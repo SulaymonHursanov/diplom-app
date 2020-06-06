@@ -12,6 +12,7 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.client.RestTemplate;
 import ru.semi.entities.TaskTime;
 import ru.semi.repositories.TaskTimeRepository;
+import ru.semi.services.TaskTimeCalculatorService;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -31,16 +32,18 @@ import static ru.semi.config.Constants.DATE_TIME_FORMAT;
 @RestController
 public class TimeCalculatorController {
 
-	private final TaskTimeRepository taskTimeRepository;
-	private DateTimeFormatter formatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
+	private final TaskTimeCalculatorService taskTimeCalculatorService;
 
 	@SneakyThrows
 	@GetMapping(value = "/bpmn", produces = "text/plain;charset=UTF-8")
 	public ResponseEntity<String> bpmn () {
 		RestTemplate restTemplate = new RestTemplate();
 
+		//https://docs.camunda.org/manual/7.7/reference/rest/deployment/get-resource/
+//		http://localhost:8080/rest/deployment/{id}
+//		http://localhost:8080/rest/deployment/{id-of-deployment}/resources/{id-of-resource}
 		File exchange = restTemplate.execute(
-				"http://localhost:8080/rest/deployment/35b4da19-92d7-11ea-ad5f-54f52165c615/resources/35b4da1a-92d7-11ea-ad5f-54f52165c615/data",
+				"http://localhost:8080/rest/deployment/1aa3788a-a57c-11ea-9be5-7cb27d1e12c5/resources/1aa39f9b-a57c-11ea-9be5-7cb27d1e12c5/data",
 				HttpMethod.GET,
 				null,
 				clientHttpResponse -> {
@@ -57,55 +60,11 @@ public class TimeCalculatorController {
 
 	@PostMapping("/calculateTime")
 	public ResponseEntity<String> calculateTime (@RequestBody TaskTimeDto taskTimeDto) {
-		log.info("taskTimeDto: {}", taskTimeDto);
-		int hours = taskTimeDto.getHours();
-		LocalDateTime fromTime ;
-
-		String processInstanceId = taskTimeDto.getProcessInstanceId();
-		String parentTaskId = taskTimeDto.getParentTaskId();
-		log.info("parent task Id: {}", parentTaskId );
-
-
-		if (nonNull(parentTaskId)) {
-			Optional<TaskTime> previous = taskTimeRepository.findFirstByProcessIdAndTaskId(processInstanceId, parentTaskId);
-			log.info("is found previous task: {}", previous.isPresent() ? "yes" : "no");
-			if (previous.isPresent()) {
-				fromTime = previous.get().getToTime();
-			} else throw new IllegalArgumentException("previous task not found");
-		} else {
-			fromTime = nonNull(taskTimeDto.getFromTime()) ? taskTimeDto.getFromTime() : LocalDateTime.now();
-		}
-
-		List<TaskTime> previousProcessTask = taskTimeRepository.findAllByTaskIdAndToTimeIsAfterOrderByToTimeDesc(taskTimeDto.getCurrentActivityId(), fromTime);
-		int queueCount = previousProcessTask.size();
-		if (previousProcessTask.size() > 0) {
-			LocalDateTime toTime = previousProcessTask.get(0).getToTime();
-			log.info("toTime -> fromTime {} for new task: {}", fromTime, toTime);
-			fromTime = toTime;
-		}
-
-		LocalDateTime endOfTaskTime = fromTime.plusHours(hours);
-		log.info("from: {}, till: {}, hours: {}, name: {},  processId: {}",
-				fromTime.format(formatter), endOfTaskTime.format(formatter), hours, taskTimeDto.getCurrentActivityName(),  processInstanceId);
-
-		saveTask(taskTimeDto.getCurrentActivityName(), taskTimeDto.getCurrentActivityId(), parentTaskId, processInstanceId,hours, fromTime, endOfTaskTime, queueCount);
-
-		return ResponseEntity.ok(endOfTaskTime.format(formatter));
+		String taskTime = taskTimeCalculatorService.calculateTaskTime(taskTimeDto);
+		return ResponseEntity.ok(taskTime);
 	}
 
-	private void saveTask(String currentActivityName, String currentActivityId, String parentTaskId, String processInstanceId, int hours, LocalDateTime fromTime, LocalDateTime endOfTaskTime, int queueCount) {
-		TaskTime taskTime = new TaskTime();
-		taskTime.setFromTime(fromTime);
-		taskTime.setToTime(endOfTaskTime);
-		taskTime.setHours(hours);
-		taskTime.setName(currentActivityName);
-		taskTime.setTaskId(currentActivityId);
-		taskTime.setProcessId(processInstanceId);
-		taskTime.setEventTime(LocalDateTime.now());
-		taskTime.setParentTaskId(parentTaskId);
-		taskTime.setQueueCount(queueCount);
-		taskTimeRepository.save(taskTime);
-	}
+
 
 
 }

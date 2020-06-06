@@ -72,7 +72,7 @@ public class ExternalTaskClientApp {
 		log.info("ending worker handler");
 	}
 
-	// i need new function for storing end time of tasks to compare with current execution task to get sequental date
+	// todo  need new function for storing end time of tasks to compare with current execution task to get sequental date
 
 	@SneakyThrows
 //	@Scheduled(fixedDelay = 5 * 1000)
@@ -123,14 +123,6 @@ public class ExternalTaskClientApp {
 		client.subscribe("invoiceCreator")
 				.handler((externalTask, externalTaskService) -> {
 
-//					// instantiate an invoice object
-//					Invoice invoice = new Invoice("A123");
-//
-//					// create an object typed variable with the serialization format XML
-//					ObjectValue invoiceValue = ClientValues
-//							.objectValue(invoice)
-//							.serializationDataFormat("application/xml")
-//							.create();
 					log.info("The External Task " + externalTask.getId() + " name: " + externalTask.getActivityId() +
 							" has been started!");
 

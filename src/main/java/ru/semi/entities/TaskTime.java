@@ -23,4 +23,7 @@ public class TaskTime {
 	private String processId;
 	private String parentTaskId;
 	private Integer queueCount;
+	private Integer workerIndex;
+	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
+	private TaskComplexity taskComplexity;
 }

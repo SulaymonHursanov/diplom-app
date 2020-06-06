@@ -17,6 +17,16 @@
           <camunda:property name="fromDate" value="2020-05-10" />
           <camunda:property name="tillDate" value="2020-05-30" />
           <camunda:property name="orderCount" value="25" />
+          <camunda:property name="orderComplexity_1" value="80" />
+          <camunda:property name="orderComplexity_2" />
+          <camunda:property name="orderComplexity_3" />
+          <camunda:property name="orderComplexity_4" />
+          <camunda:property name="orderComplexity_5" />
+          <camunda:property name="orderComplexity_6" />
+          <camunda:property name="orderComplexity_7" value="20" />
+          <camunda:property name="orderComplexity_8" />
+          <camunda:property name="orderComplexity_9" />
+          <camunda:property name="orderComplexity_10" />
         </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0hf2yxl</bpmn:incoming>

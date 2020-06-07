@@ -10,8 +10,16 @@ import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
 import org.camunda.bpm.model.bpmn.instance.ServiceTask;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperties;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperty;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
+import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
+import org.springframework.web.client.RestTemplate;
+import ru.semi.dto.DeploymentResource;
 import ru.semi.dto.OrderInfo;
+import ru.semi.dto.ProcessDeployment;
+import ru.semi.entities.ProcessGenerator;
+import ru.semi.repositories.ProcessGeneratorRepository;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
@@ -34,6 +42,7 @@ public class ProcessGeneratorActivity implements JavaDelegate {
 	private final DateTimeFormatter dateFormatter = DateTimeFormatter.ofPattern(DATE_FORMAT);
 	private final DateTimeFormatter dateTimeFormatter = DateTimeFormatter.ofPattern(DATE_TIME_FORMAT);
 	private final RuntimeService runtimeService;
+	private final ProcessGeneratorRepository processGeneratorRepository;
 
 	@Override
 	public void execute(DelegateExecution execution) throws Exception {
@@ -68,14 +77,37 @@ public class ProcessGeneratorActivity implements JavaDelegate {
 		List<String> keys = new ArrayList<>(orderComplexityMap.keySet());
 		Random random = new Random();
 		List<OrderInfo> orderInfos = getOrderInfos(fromDate, tillDate, orderCount, orderComplexityMap, keys, random);
+		String processTemplateId = properties.get("processTemplateId");
+		String deploymentId = getDeploymentId(processTemplateId);
+		String resourceId = getResourceId(deploymentId);
+		log.info("deploymentId: {}, resourceId: {}", deploymentId, resourceId);
+
+		String generatorProcessInstanceId = execution.getProcessInstanceId();
+		saveProcessGeneratorInfo(
+				generatorProcessInstanceId,
+				processTemplateId,
+				deploymentId,
+				resourceId
+		);
 
 		orderInfos.forEach(orderInfo -> {
 			Map<String, Object> variables = new HashMap<>();
 			variables.put("fromTime", LocalDateTime.of(orderInfo.getFromDate(), workingStartTime).format(dateTimeFormatter));
 			variables.put("orderComplexity", orderInfo.getOrderComplexity());
+			variables.put("parentProcessInstance", generatorProcessInstanceId);
 			log.info("started process");
-			runtimeService.startProcessInstanceByKey("FurnitureFactoryProcess", variables);
+			runtimeService.startProcessInstanceByKey(processTemplateId, variables);
 		});
+	}
+
+	private void saveProcessGeneratorInfo(String processInstanceId, String processTemplateId, String deploymentId, String resourceId) {
+		ProcessGenerator processGenerator = new ProcessGenerator();
+		processGenerator.setProcessInstanceId(processInstanceId);
+		processGenerator.setProcessTemplateId(processTemplateId);
+		processGenerator.setDeploymentId(deploymentId);
+		processGenerator.setResourceId(resourceId);
+		processGenerator.setStartTime(LocalDateTime.now());
+		processGeneratorRepository.save(processGenerator);
 	}
 
 	private List<OrderInfo> getOrderInfos(LocalDate fromDate, LocalDate tillDate, int orderCount, Map<String, Integer> orderComplexityMap, List<String> keys, Random random) {
@@ -103,6 +135,9 @@ public class ProcessGeneratorActivity implements JavaDelegate {
 			String orderComplexity = properties.get(key);
 			if (nonNull(orderComplexity) && !orderComplexity.isEmpty()) {
 				int orderComplexityPercentage = Integer.parseInt(orderComplexity);
+				if (orderComplexityPercentage == 0){
+					continue;
+				}
 				int orderComplexityCount =  (int)((orderCount / 100.0) * (double) orderComplexityPercentage);
 				log.info("key: {}, orderComplexityCount: {}", key, orderComplexityCount);
 				orderComplexityMap.put(key, orderComplexityCount);
@@ -129,5 +164,42 @@ public class ProcessGeneratorActivity implements JavaDelegate {
 	private LocalDate generateDate (LocalDate fromDate, LocalDate tillDate) {
 		long between = DAYS.between(fromDate, tillDate);
 		return fromDate.plusDays(ThreadLocalRandom.current().nextInt((int) (between+1)));
+	}
+
+	private String getDeploymentId (String name) {
+		RestTemplate restTemplate = new RestTemplate();
+		String url = "http://localhost:8080/rest/deployment?name={name}";
+		ResponseEntity<List<ProcessDeployment>> exchange = restTemplate.exchange(
+				url,
+				HttpMethod.GET,
+				null,
+				new ParameterizedTypeReference<List<ProcessDeployment>>() {
+				},
+				name
+		);
+		List<ProcessDeployment> processDeployments = exchange.getBody();
+		ProcessDeployment processDeployment = processDeployments.stream()
+				.sorted(Comparator.comparing(ProcessDeployment::getDeploymentTime, Comparator.reverseOrder()))
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("Process deployment not found by name: " + name));
+		return processDeployment.getId();
+	}
+
+	private String getResourceId (String deploymentId) {
+		RestTemplate restTemplate = new RestTemplate();
+		String url = "http://localhost:8080/rest/deployment/{deploymentId}/resources";
+		ResponseEntity<List<DeploymentResource>> exchange = restTemplate.exchange(
+				url,
+				HttpMethod.GET,
+				null,
+				new ParameterizedTypeReference<List<DeploymentResource>>() {
+				},
+				deploymentId
+		);
+		List<DeploymentResource> deploymentResources = exchange.getBody();
+		DeploymentResource deploymentResource = deploymentResources.stream()
+				.findFirst()
+				.orElseThrow(() -> new IllegalArgumentException("Deployment resource not found by id: " + deploymentId));
+		return deploymentResource.getId();
 	}
 }

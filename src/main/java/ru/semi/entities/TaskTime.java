@@ -2,6 +2,7 @@ package ru.semi.entities;
 
 import lombok.Getter;
 import lombok.Setter;
+import lombok.ToString;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
@@ -10,6 +11,7 @@ import java.time.LocalDateTime;
 @Table(name = "task_time")
 @Getter
 @Setter
+@ToString
 public class TaskTime {
 	@Id
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
@@ -26,4 +28,5 @@ public class TaskTime {
 	private Integer workerIndex;
 	@OneToOne(fetch = FetchType.LAZY, cascade = CascadeType.ALL)
 	private TaskComplexity taskComplexity;
+	private String parentProcessInstanceId;
 }

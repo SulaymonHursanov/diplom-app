@@ -22,9 +22,9 @@
         <bpmn:flowNodeRef>Activity_1rtqneb</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>ExclusiveGateway_0v0819u</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>Task_2</bpmn:flowNodeRef>
-        <bpmn:flowNodeRef>task_4</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>task5</bpmn:flowNodeRef>
         <bpmn:flowNodeRef>task6</bpmn:flowNodeRef>
+        <bpmn:flowNodeRef>task_4</bpmn:flowNodeRef>
       </bpmn:lane>
     </bpmn:laneSet>
     <bpmn:startEvent id="StartEvent_1" name="Заказчик согласился на замер">
@@ -172,16 +172,6 @@
       <bpmn:incoming>Flow_14jqrk8</bpmn:incoming>
       <bpmn:outgoing>Flow_1rbfhlg</bpmn:outgoing>
     </bpmn:serviceTask>
-    <bpmn:serviceTask id="task_4" name="task4" camunda:delegateExpression="${timeCalculatorActivity}">
-      <bpmn:extensionElements>
-        <camunda:properties>
-          <camunda:property name="min" value="4" />
-          <camunda:property name="max" value="6" />
-        </camunda:properties>
-      </bpmn:extensionElements>
-      <bpmn:incoming>Flow_1rbfhlg</bpmn:incoming>
-      <bpmn:outgoing>Flow_023e7qr</bpmn:outgoing>
-    </bpmn:serviceTask>
     <bpmn:sequenceFlow id="Flow_1rbfhlg" sourceRef="Task_2" targetRef="task_4" />
     <bpmn:serviceTask id="task5" name="task5" camunda:delegateExpression="${timeCalculatorActivity}">
       <bpmn:extensionElements>
@@ -206,6 +196,16 @@
     </bpmn:serviceTask>
     <bpmn:sequenceFlow id="Flow_0rqxufk" sourceRef="task5" targetRef="task6" />
     <bpmn:sequenceFlow id="Flow_18wbdnf" sourceRef="task6" targetRef="ExclusiveGateway_0v0819u" />
+    <bpmn:serviceTask id="task_4" name="task4" camunda:delegateExpression="${timeCalculatorActivity}">
+      <bpmn:extensionElements>
+        <camunda:properties>
+          <camunda:property name="min" value="4" />
+          <camunda:property name="max" value="6" />
+        </camunda:properties>
+      </bpmn:extensionElements>
+      <bpmn:incoming>Flow_1rbfhlg</bpmn:incoming>
+      <bpmn:outgoing>Flow_023e7qr</bpmn:outgoing>
+    </bpmn:serviceTask>
   </bpmn:process>
   <bpmndi:BPMNDiagram id="BPMNDiagram_1">
     <bpmndi:BPMNPlane id="BPMNPlane_1" bpmnElement="Collaboration_1klg50l">

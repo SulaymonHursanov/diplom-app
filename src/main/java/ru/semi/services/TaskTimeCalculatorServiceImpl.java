@@ -78,13 +78,14 @@ public class TaskTimeCalculatorServiceImpl implements TaskTimeCalculatorService 
                 fromTime,
                 endOfTaskTime,
                 queueCount,
-                workerIndex
+                workerIndex,
+                taskTimeDto.getParentProcessInstanceId()
         );
 
         return endOfTaskTime.format(formatter);
     }
 
-    private void saveTask(String currentActivityName, String currentActivityId, String parentTaskId, String processInstanceId, int hours, LocalDateTime fromTime, LocalDateTime endOfTaskTime, int queueCount, int workerIndex) {
+    private void saveTask(String currentActivityName, String currentActivityId, String parentTaskId, String processInstanceId, int hours, LocalDateTime fromTime, LocalDateTime endOfTaskTime, int queueCount, int workerIndex, String parentProcessInstanceId) {
         TaskTime taskTime = new TaskTime();
         taskTime.setFromTime(fromTime);
         taskTime.setToTime(endOfTaskTime);
@@ -96,6 +97,7 @@ public class TaskTimeCalculatorServiceImpl implements TaskTimeCalculatorService 
         taskTime.setParentTaskId(parentTaskId);
         taskTime.setQueueCount(queueCount);
         taskTime.setWorkerIndex(workerIndex);
+        taskTime.setParentProcessInstanceId(parentProcessInstanceId);
         taskTimeRepository.save(taskTime);
     }
 }

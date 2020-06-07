@@ -86,15 +86,15 @@ public class TimeCalculatorActivity implements JavaDelegate {
 		if (nonNull(fromTimeObj)) {
 			fromTime = LocalDateTime.parse((String) fromTimeObj, formatter);
 		}
+		String parentProcessInstance = (String) delegateExecution.getVariable("parentProcessInstance");
 
-
-		String endOfTaskTime = requestCalculation(currentActivityName, currentActivityId, processInstanceId, parentTaskId, workerCountByOrderComplexity, taskComplexityName, hours, fromTime);
+		String endOfTaskTime = requestCalculation(parentProcessInstance, currentActivityName, currentActivityId, processInstanceId, parentTaskId, workerCountByOrderComplexity, taskComplexityName, hours, fromTime);
 
 		delegateExecution.setVariable("fromTime", endOfTaskTime);
 
 	}
 
-	private String requestCalculation(String currentActivityName, String currentActivityId, String processInstanceId, String parentTaskId, int workerCountByOrderComplexity, String taskComplexityName, int hours, LocalDateTime fromTime) {
+	private String requestCalculation(String parentProcessInstance, String currentActivityName, String currentActivityId, String processInstanceId, String parentTaskId, int workerCountByOrderComplexity, String taskComplexityName, int hours, LocalDateTime fromTime) {
 		TaskTimeDto taskTimeDto = new TaskTimeDto();
 		taskTimeDto.setCurrentActivityId(currentActivityId);
 		taskTimeDto.setCurrentActivityName(currentActivityName);
@@ -104,6 +104,7 @@ public class TimeCalculatorActivity implements JavaDelegate {
 		taskTimeDto.setProcessInstanceId(processInstanceId);
 		taskTimeDto.setWorkerCount(workerCountByOrderComplexity);
 		taskTimeDto.setTaskComplexityName(taskComplexityName);
+		taskTimeDto.setParentProcessInstanceId(parentProcessInstance);
 
 		HttpHeaders httpHeaders = new HttpHeaders();
 		httpHeaders.setContentType(MediaType.APPLICATION_JSON);

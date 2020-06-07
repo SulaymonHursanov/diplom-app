@@ -14,4 +14,5 @@ public class TaskTimeDto {
 	private LocalDateTime fromTime;
 	private Integer workerCount;
 	private String taskComplexityName;
+	private String parentProcessInstanceId;
 }

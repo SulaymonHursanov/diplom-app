@@ -4,29 +4,30 @@
     <bpmn:startEvent id="StartEvent_1">
       <bpmn:outgoing>Flow_0hf2yxl</bpmn:outgoing>
     </bpmn:startEvent>
-    <bpmn:sequenceFlow id="Flow_0hf2yxl" sourceRef="StartEvent_1" targetRef="Activity_0rwtixc" />
+    <bpmn:sequenceFlow id="Flow_0hf2yxl" sourceRef="StartEvent_1" targetRef="order_generator" />
     <bpmn:endEvent id="Event_0sxrjnz">
       <bpmn:incoming>Flow_1rdtjak</bpmn:incoming>
     </bpmn:endEvent>
-    <bpmn:sequenceFlow id="Flow_1rdtjak" sourceRef="Activity_0rwtixc" targetRef="Event_0sxrjnz" />
-    <bpmn:serviceTask id="Activity_0rwtixc" name="Генерация заказов" camunda:delegateExpression="${processGeneratorActivity}">
+    <bpmn:sequenceFlow id="Flow_1rdtjak" sourceRef="order_generator" targetRef="Event_0sxrjnz" />
+    <bpmn:serviceTask id="order_generator" name="Генерация заказов" camunda:delegateExpression="${processGeneratorActivity}">
       <bpmn:extensionElements>
         <camunda:properties>
           <camunda:property name="workingStartTime" value="08:00" />
           <camunda:property name="workingEndTime" value="18:00" />
           <camunda:property name="fromDate" value="2020-05-10" />
-          <camunda:property name="tillDate" value="2020-05-30" />
+          <camunda:property name="tillDate" value="2020-05-20" />
           <camunda:property name="orderCount" value="25" />
           <camunda:property name="orderComplexity_1" value="80" />
-          <camunda:property name="orderComplexity_2" />
-          <camunda:property name="orderComplexity_3" />
-          <camunda:property name="orderComplexity_4" />
-          <camunda:property name="orderComplexity_5" />
-          <camunda:property name="orderComplexity_6" />
+          <camunda:property name="orderComplexity_2" value="0" />
+          <camunda:property name="orderComplexity_3" value="0" />
+          <camunda:property name="orderComplexity_4" value="0" />
+          <camunda:property name="orderComplexity_5" value="0" />
+          <camunda:property name="orderComplexity_6" value="0" />
           <camunda:property name="orderComplexity_7" value="20" />
-          <camunda:property name="orderComplexity_8" />
-          <camunda:property name="orderComplexity_9" />
-          <camunda:property name="orderComplexity_10" />
+          <camunda:property name="orderComplexity_8" value="0" />
+          <camunda:property name="orderComplexity_9" value="0" />
+          <camunda:property name="orderComplexity_10" value="0" />
+          <camunda:property name="processTemplateId" value="FurnitureFactoryProcess" />
         </camunda:properties>
       </bpmn:extensionElements>
       <bpmn:incoming>Flow_0hf2yxl</bpmn:incoming>
@@ -49,7 +50,7 @@
         <di:waypoint x="470" y="117" />
         <di:waypoint x="652" y="117" />
       </bpmndi:BPMNEdge>
-      <bpmndi:BPMNShape id="Activity_021gtqm_di" bpmnElement="Activity_0rwtixc">
+      <bpmndi:BPMNShape id="Activity_021gtqm_di" bpmnElement="order_generator">
         <dc:Bounds x="370" y="77" width="100" height="80" />
       </bpmndi:BPMNShape>
     </bpmndi:BPMNPlane>

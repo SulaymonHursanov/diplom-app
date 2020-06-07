@@ -5,7 +5,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import ru.semi.entities.TaskTime;
 import ru.semi.repositories.TaskTimeRepository;
-import ru.semi.rest.TaskTimeDto;
+import ru.semi.dto.TaskTimeDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
@@ -35,8 +35,9 @@ public class TaskTimeCalculatorServiceImpl implements TaskTimeCalculatorService 
 
         String taskComplexityName = taskTimeDto.getTaskComplexityName();
 
+        String parentProcessInstanceId = taskTimeDto.getParentProcessInstanceId();
         if (nonNull(parentTaskId)) {
-            Optional<TaskTime> previous = taskTimeRepository.findFirstByProcessIdAndTaskId(processInstanceId, parentTaskId);
+            Optional<TaskTime> previous = taskTimeRepository.findFirstByProcessIdAndTaskIdAndParentProcessInstanceId(processInstanceId, parentTaskId, parentProcessInstanceId);
             log.info("is found previous task: {}", previous.isPresent() ? "yes" : "no");
             if (previous.isPresent()) {
                 fromTime = previous.get().getToTime();
@@ -46,10 +47,10 @@ public class TaskTimeCalculatorServiceImpl implements TaskTimeCalculatorService 
         }
         List<TaskTime> previousProcessTask ;
         if (nonNull(taskComplexityName)) {
-            previousProcessTask = taskTimeRepository.findAllByTaskIdAndToTimeIsAfterAndTaskComplexityOrderComplexityNameOrderByToTimeDesc(
-                    taskTimeDto.getCurrentActivityId(), fromTime, taskComplexityName);
+            previousProcessTask = taskTimeRepository.findAllByTaskIdAndParentProcessInstanceIdAndToTimeIsAfterAndTaskComplexityOrderComplexityNameOrderByToTimeDesc(
+                    taskTimeDto.getCurrentActivityId(), parentProcessInstanceId, fromTime, taskComplexityName);
         }else {
-            previousProcessTask = taskTimeRepository.findAllByTaskIdAndToTimeIsAfterOrderByToTimeDesc(taskTimeDto.getCurrentActivityId(), fromTime);
+            previousProcessTask = taskTimeRepository.findAllByTaskIdAndParentProcessInstanceIdAndToTimeIsAfterOrderByToTimeDesc(taskTimeDto.getCurrentActivityId(), parentProcessInstanceId, fromTime);
         }
 
         int queueCount = 0;
@@ -79,7 +80,7 @@ public class TaskTimeCalculatorServiceImpl implements TaskTimeCalculatorService 
                 endOfTaskTime,
                 queueCount,
                 workerIndex,
-                taskTimeDto.getParentProcessInstanceId()
+                parentProcessInstanceId
         );
 
         return endOfTaskTime.format(formatter);

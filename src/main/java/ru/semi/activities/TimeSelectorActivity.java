@@ -22,8 +22,8 @@ public class TimeSelectorActivity implements JavaDelegate {
 	@Override
 	public void execute(DelegateExecution execution) throws Exception {
 		String processInstanceId = execution.getProcessInstanceId();
-
-		Optional<TaskTime> taskTimeOpt = taskTimeRepository.findFirstByProcessIdOrderByToTimeDesc(processInstanceId);
+		String parentProcessInstance = (String) execution.getVariable("parentProcessInstance");
+		Optional<TaskTime> taskTimeOpt = taskTimeRepository.findFirstByProcessIdAndParentProcessInstanceIdOrderByToTimeDesc(processInstanceId, parentProcessInstance);
 		TaskTime taskTime = taskTimeOpt.orElseThrow(() -> new IllegalArgumentException("task not found on process: " + processInstanceId));
 		execution.setVariable("fromTime", taskTime.getToTime().format(formatter));
 	}

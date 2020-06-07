@@ -47,6 +47,9 @@ public class ReportController {
 
     @RequestMapping(value = "/download/report/{generatorInstanceId}", method = RequestMethod.GET)
     public ResponseEntity<Void> downloadReport (@PathVariable String generatorInstanceId, HttpServletResponse httpServletResponse) {
+        httpServletResponse.setContentType("text/xlsx");
+        httpServletResponse.setCharacterEncoding("utf-8");
+        httpServletResponse.setHeader("Content-Disposition", "attachment; filename=\"report.xlsx\"");
         reportService.downloadProcessExecutionReport(generatorInstanceId, httpServletResponse);
         return ResponseEntity.ok().build();
     }

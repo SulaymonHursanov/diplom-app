@@ -1,4 +1,4 @@
-package ru.semi.rest;
+package ru.semi.dto;
 
 import lombok.Data;
 

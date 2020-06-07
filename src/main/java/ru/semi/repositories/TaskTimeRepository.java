@@ -10,10 +10,11 @@ import java.util.List;
 import java.util.Optional;
 
 public interface TaskTimeRepository extends JpaRepository<TaskTime, Long> {
-	Optional<TaskTime> findFirstByProcessIdOrderByToTimeDesc(String processInstanceId);
-	Optional<TaskTime> findFirstByProcessIdAndTaskId(String processInstanceId, String taskId);
-	List<TaskTime> findAllByTaskIdAndToTimeIsAfterOrderByToTimeDesc(String taskId, LocalDateTime toTime);
-	List<TaskTime> findAllByTaskIdAndToTimeIsAfterAndTaskComplexityOrderComplexityNameOrderByToTimeDesc(String taskId, LocalDateTime toTime, String taskComplexityName);
+	Optional<TaskTime> findFirstByProcessIdAndParentProcessInstanceIdOrderByToTimeDesc(String processInstanceId, String parentProcessInstanceId);
+	Optional<TaskTime> findFirstByProcessIdAndTaskIdAndParentProcessInstanceId(String processInstanceId, String taskId, String parentProcessInstanceId);
+	List<TaskTime> findAllByTaskIdAndParentProcessInstanceIdAndToTimeIsAfterOrderByToTimeDesc(String taskId, String parentProcessInstanceId, LocalDateTime toTime);
+	List<TaskTime> findAllByTaskIdAndParentProcessInstanceIdAndToTimeIsAfterAndTaskComplexityOrderComplexityNameOrderByToTimeDesc(
+			String taskId,  String parentProcessInstanceId, LocalDateTime toTime, String taskComplexityName);
 
 	@Query(nativeQuery = true,value = "select * from ( " +
 			"    select distinct on (task_id) * " +

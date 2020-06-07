@@ -5,7 +5,6 @@ import lombok.extern.slf4j.Slf4j;
 import org.camunda.bpm.engine.RuntimeService;
 import org.camunda.bpm.engine.delegate.DelegateExecution;
 import org.camunda.bpm.engine.delegate.JavaDelegate;
-import org.camunda.bpm.engine.runtime.ProcessInstance;
 import org.camunda.bpm.model.bpmn.instance.ExtensionElements;
 import org.camunda.bpm.model.bpmn.instance.ServiceTask;
 import org.camunda.bpm.model.bpmn.instance.camunda.CamundaProperties;
@@ -30,7 +29,6 @@ import java.util.concurrent.ThreadLocalRandom;
 import java.util.stream.Collectors;
 
 import static java.time.temporal.ChronoUnit.DAYS;
-import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
 import static ru.semi.config.Constants.DATE_FORMAT;
 import static ru.semi.config.Constants.DATE_TIME_FORMAT;
@@ -72,7 +70,7 @@ public class ProcessGeneratorActivity implements JavaDelegate {
 
 		int orderCount = Integer.parseInt(properties.get("orderCount"));
 
-		Map<String, Integer> orderComplexityMap = getOrderComplexityMap(properties, orderCount);
+		Map<String, Integer> orderComplexityMap = getOrderComplexityMapCount(properties, orderCount);
 
 		List<String> keys = new ArrayList<>(orderComplexityMap.keySet());
 		Random random = new Random();
@@ -87,7 +85,13 @@ public class ProcessGeneratorActivity implements JavaDelegate {
 				generatorProcessInstanceId,
 				processTemplateId,
 				deploymentId,
-				resourceId
+				resourceId,
+				workingStartTime,
+				workingEndTime,
+				fromDate,
+				tillDate,
+				getOrderComplexityMap(properties),
+				orderCount
 		);
 
 		orderInfos.forEach(orderInfo -> {
@@ -100,12 +104,22 @@ public class ProcessGeneratorActivity implements JavaDelegate {
 		});
 	}
 
-	private void saveProcessGeneratorInfo(String processInstanceId, String processTemplateId, String deploymentId, String resourceId) {
+	private void saveProcessGeneratorInfo(String processInstanceId, String processTemplateId,
+										  String deploymentId, String resourceId,
+										  LocalTime workingStartTime, LocalTime workingEndTime,
+										  LocalDate fromDate, LocalDate tillDate,
+										  Map<String, Integer> orderComplexityMap, int orderCount) {
 		ProcessGenerator processGenerator = new ProcessGenerator();
 		processGenerator.setProcessInstanceId(processInstanceId);
 		processGenerator.setProcessTemplateId(processTemplateId);
 		processGenerator.setDeploymentId(deploymentId);
 		processGenerator.setResourceId(resourceId);
+		processGenerator.setFromDate(fromDate);
+		processGenerator.setTillDate(tillDate);
+		processGenerator.setWorkingStartTime(workingStartTime);
+		processGenerator.setWorkingEndTime(workingEndTime);
+		processGenerator.setOrderCount(orderCount);
+		processGenerator.setOrderComplexity(orderComplexityMap);
 		processGenerator.setStartTime(LocalDateTime.now());
 		processGeneratorRepository.save(processGenerator);
 	}
@@ -128,7 +142,7 @@ public class ProcessGeneratorActivity implements JavaDelegate {
 				.collect(Collectors.toList());
 	}
 
-	private Map<String, Integer> getOrderComplexityMap(Map<String, String> properties, double orderCount) {
+	private Map<String, Integer> getOrderComplexityMapCount(Map<String, String> properties, double orderCount) {
 		Map<String, Integer> orderComplexityMap = new HashMap<>();
 		for (int count = 0; count < 10; count++) {
 			String key = "orderComplexity_" + count;
@@ -141,6 +155,22 @@ public class ProcessGeneratorActivity implements JavaDelegate {
 				int orderComplexityCount =  (int)((orderCount / 100.0) * (double) orderComplexityPercentage);
 				log.info("key: {}, orderComplexityCount: {}", key, orderComplexityCount);
 				orderComplexityMap.put(key, orderComplexityCount);
+			}
+		}
+		return orderComplexityMap;
+	}
+
+	private Map<String, Integer> getOrderComplexityMap(Map<String, String> properties) {
+		Map<String, Integer> orderComplexityMap = new HashMap<>();
+		for (int count = 0; count < 10; count++) {
+			String key = "orderComplexity_" + count;
+			String orderComplexity = properties.get(key);
+			if (nonNull(orderComplexity) && !orderComplexity.isEmpty()) {
+				int orderComplexityPercentage = Integer.parseInt(orderComplexity);
+				if (orderComplexityPercentage == 0){
+					continue;
+				}
+				orderComplexityMap.put(key, orderComplexityPercentage);
 			}
 		}
 		return orderComplexityMap;

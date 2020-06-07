@@ -3,12 +3,12 @@ package ru.semi.entities;
 import lombok.Getter;
 import lombok.Setter;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
+import javax.persistence.*;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.LocalTime;
+import java.util.HashMap;
+import java.util.Map;
 
 @Entity
 @Getter
@@ -24,4 +24,14 @@ public class ProcessGenerator {
     private LocalDateTime startTime;
     private LocalDate fromDate;
     private LocalDate tillDate;
+
+    private LocalTime workingStartTime;
+    private LocalTime workingEndTime;
+    private Integer orderCount;
+    @ElementCollection
+    @JoinTable(name = "order_complexity", joinColumns = @JoinColumn(name = "id"))
+    @MapKeyColumn (name="order_complexity_name")
+    @Column(name="value")
+//    @OneToMany(cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    private Map<String, Integer> orderComplexity = new HashMap<>();
 }

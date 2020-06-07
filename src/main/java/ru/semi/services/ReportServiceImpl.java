@@ -1,6 +1,7 @@
 package ru.semi.services;
 
 import lombok.AllArgsConstructor;
+import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
@@ -11,6 +12,7 @@ import ru.semi.repositories.ProcessGeneratorRepository;
 import ru.semi.repositories.TaskTimeRepository;
 
 import javax.servlet.http.HttpServletResponse;
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -24,6 +26,7 @@ public class ReportServiceImpl implements ReportService {
 
     private final TaskTimeRepository taskTimeRepository;
     private final ProcessGeneratorRepository processGeneratorRepository;
+    private final FormatConverterService formatConverterService;
 
     @Override
     public Map<String, Integer> getTasksQueueCount(String generatorProcessInstanceId) {
@@ -45,6 +48,7 @@ public class ReportServiceImpl implements ReportService {
         return processGeneratorList;
     }
 
+    @SneakyThrows
     @Override
     public void downloadProcessExecutionReport(String generatorInstanceId, HttpServletResponse httpServletResponse) {
         ProcessGenerator processGenerator = processGeneratorRepository.findFirstByProcessInstanceId(generatorInstanceId)
@@ -67,16 +71,17 @@ public class ReportServiceImpl implements ReportService {
             log.info("task name: {}, average time: {}", k, v);
         });
         Map<String, ProcessExecutionInfo> processExecutionInfoMap = getProcessExecutionInfoMap(taskTimeList);
-        LocalDateTime fromTime = taskTimeList.stream()
+        LocalDate fromTime = taskTimeList.stream()
                 .min(Comparator.comparing(TaskTime::getFromTime))
                 .get()
-                .getFromTime();
-        LocalDateTime toTime = taskTimeList.stream()
+                .getFromTime()
+                .toLocalDate();
+        LocalDate toTime = taskTimeList.stream()
                 .max(Comparator.comparing(TaskTime::getToTime))
                 .get()
-                .getToTime();
-        processGenerator.getFromDate();
-        processGenerator.getTillDate();
+                .getToTime()
+                .toLocalDate();
+        formatConverterService.toExcel(taskAverageTime, processExecutionInfoMap, fromTime, toTime, processGenerator, httpServletResponse.getOutputStream());
     }
 
     @Override
@@ -104,11 +109,17 @@ public class ReportServiceImpl implements ReportService {
                     processExecutionInfo.setStopTime(toTime);
                 }
             }else {
-                processExecutionInfo.setInstanceId(taskTime.getParentProcessInstanceId());
+                processExecutionInfo.setInstanceId(taskTime.getProcessId());
                 processExecutionInfo.setStartTime(fromTime);
                 processExecutionInfo.setStopTime(toTime);
             }
+            processExecutionInfoMap.put(taskTime.getProcessId(), processExecutionInfo);
         }
-        return processExecutionInfoMap;
+        return processExecutionInfoMap
+                .entrySet()
+                .stream()
+                .sorted(Map.Entry.comparingByValue(Comparator.comparing(ProcessExecutionInfo::getStartTime)))
+                .collect(Collectors.toMap(
+                        Map.Entry::getKey, Map.Entry::getValue, (e1, e2) -> e1, LinkedHashMap::new));
     }
 }

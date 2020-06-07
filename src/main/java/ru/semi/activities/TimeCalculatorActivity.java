@@ -13,7 +13,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 import ru.semi.entities.TaskComplexity;
 import ru.semi.repositories.TaskComplexityRepository;
-import ru.semi.rest.TaskTimeDto;
+import ru.semi.dto.TaskTimeDto;
 
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
